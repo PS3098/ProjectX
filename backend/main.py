@@ -18,12 +18,26 @@ genai.configure(api_key=GEMINI_API_KEY)
 
 app = FastAPI()
 
-# Serve static files (frontend)
-app.mount("/static", StaticFiles(directory="frontend/public"), name="static")
+# ✅ Serve static files from the correct frontend build path
+# Use the correct relative path to the frontend build
+frontend_path = os.path.abspath("../frontend/dist")
+
+# Check if the build folder exists
+if os.path.exists(frontend_path):
+    app.mount("/", StaticFiles(directory=frontend_path, html=True), name="static")
+    print(f"✅ Serving frontend from {frontend_path}")
+else:
+    print(f"❌ Frontend build directory not found: {frontend_path}")
 
 @app.get("/")
 async def root():
-    return FileResponse("frontend/public/index.html")
+    """ Serve the React app """
+    index_path = os.path.join(frontend_path, "index.html")
+
+    if os.path.exists(index_path):
+        return FileResponse(index_path)
+    else:
+        return {"error": "index.html not found"}
 
 @app.post("/generate-feedback/")
 async def generate_feedback(file: UploadFile = File(...)):
