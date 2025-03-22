@@ -13,16 +13,16 @@ const Header = () => {
   ];
 
   return (
-    <header className="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
+    <header className="bg-[#F8F1E5] backdrop-blur-md shadow-sm sticky top-0 z-50">
       <nav className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <Link to="/" className="flex items-center space-x-2 group">
-            <div className="bg-indigo-600 p-2 rounded-xl group-hover:bg-indigo-700 transition-colors">
+            <div className="bg-[#2C3E50] p-2 rounded-xl group-hover:bg-[#D4AF37] transition-colors">
               <GraduationCap className="h-6 w-6 text-white" />
             </div>
             <span className="text-2xl font-bold bg-clip-text text-transparent 
-                         bg-gradient-to-r from-indigo-600 to-indigo-800">
-              EduFeedback
+                         bg-gradient-to-r from-[#2C3E50] to-[#D4AF37]">
+              InsightEd
             </span>
           </Link>
           
@@ -34,8 +34,8 @@ const Header = () => {
                 className={`relative group flex items-center space-x-2 px-4 py-2 rounded-xl
                           transition-colors ${
                             location.pathname === path
-                            ? 'text-indigo-600'
-                            : 'text-gray-600 hover:text-indigo-600'
+                            ? 'text-[#2C3E50]'
+                            : 'text-[#2C2C2C] hover:text-[#2C3E50]'
                           }`}
               >
                 <Icon className="h-5 w-5" />
@@ -43,7 +43,7 @@ const Header = () => {
                 {location.pathname === path && (
                   <motion.div
                     layoutId="nav-indicator"
-                    className="absolute inset-0 bg-indigo-50 rounded-xl -z-10"
+                    className="absolute inset-0 bg-[#D4AF37] rounded-xl -z-10"
                     initial={false}
                     transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                   />
@@ -58,3 +58,4 @@ const Header = () => {
 };
 
 export default Header;
+

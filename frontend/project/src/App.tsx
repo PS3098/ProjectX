@@ -11,7 +11,8 @@ import History from './pages/History';
 function App() {
   return (
     <BrowserRouter>
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex flex-col">
+      <div className="min-h-screen mesh-gradient flex flex-col">
+{/* in-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex flex-col"> */}
         <Header />
         <main className="flex-grow container mx-auto px-4 py-8">
           <AnimatePresence mode="wait">

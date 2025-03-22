@@ -1,3 +1,9 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+@layer utilities {
+  .mesh-gradient {
+    background: radial-gradient(circle at 30% 30%, #FDE68A, #FCA5A5, #A78BFA, #60A5FA);
+    background-attachment: fixed;
+  }
+}
