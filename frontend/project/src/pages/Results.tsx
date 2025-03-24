@@ -35,6 +35,38 @@ const Results = () => {
     localStorage.setItem('feedbackHistory', JSON.stringify(existingHistory));
     alert('Feedback saved to history!');
   };
+const renderFormattedFeedback = (feedback) => {
+  if (!feedback) return null;
+
+  return feedback.split("\n").map((line, index) => {
+    // Convert section titles to bold headers
+    if (line.startsWith("**")) {
+      return (
+        <h3 key={index} className="text-lg font-bold mt-6 text-gray-900">
+          {line.replace(/\*\*/g, "")}  {/* Remove ** from title */}
+        </h3>
+      );
+    }
+    // Convert bullet points to list items
+    else if (line.startsWith("* ")) {
+      return (
+        <li key={index} className="ml-6 list-disc text-gray-700">
+          {line.replace("* ", "")}  {/* Remove * from bullet point */}
+        </li>
+      );
+    }
+    // Convert normal text into paragraphs
+    else if (line.trim() !== "") {
+      return (
+        <p key={index} className="text-gray-700 mt-2 leading-relaxed">
+          {line}
+        </p>
+      );
+    }
+    return null; // Ignore empty lines
+  });
+};
+
 
   return (
     <motion.div
@@ -117,9 +149,9 @@ const Results = () => {
           <div>
             <h3 className="text-xl font-semibold mb-4">Feedback Content</h3>
             <div className="bg-gray-50 p-6 rounded-xl">
-              <pre className="whitespace-pre-wrap text-gray-700 font-mono text-sm">
-                {feedback}
-              </pre>
+              <div className="bg-gray-50 p-6 rounded-xl space-y-4">
+  {renderFormattedFeedback(feedback)}
+              </div>
             </div>
           </div>
         </motion.div>
