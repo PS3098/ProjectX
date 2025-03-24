@@ -40,7 +40,13 @@ const Upload = () => {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
-      navigate('/results', { state: { feedback: response.data.feedback } });
+      navigate('/results', {
+  state: {
+    feedback: response.data.feedback || "No feedback generated.",
+    score: response.data.score ?? "N/A",  // Prevent undefined errors
+  },
+});
+
 
     } catch (error) {
       console.error('Upload failed:', error);

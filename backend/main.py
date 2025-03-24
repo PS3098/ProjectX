@@ -4,6 +4,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import google.generativeai as genai
 import os
+import re
 from docx import Document
 import pdfplumber
 from dotenv import load_dotenv
@@ -111,8 +112,25 @@ async def generate_feedback(
         response = model.generate_content(f"Give detailed feedback on this student submission:\n{text}")
 
         feedback = response.text
+        score_prompt = (
+            "Evaluate the student's submission on a scale of 0 to 100 based on clarity, grammar, coherence, and relevance. "
+            "Respond only with a number and no explanation."
+        )
+        score_response = model.generate_content(score_prompt)
 
-        return JSONResponse(content={"feedback": feedback}, status_code=200)
+        # ✅ Extract the score safely
+        score_text = score_response.text.strip() if score_response.text else "50"
+        try:
+            score = int(''.join(filter(str.isdigit, score_text)))  # Extract numbers only
+            score = max(0, min(score, 100))  # Ensure score is within 0-100
+        except ValueError:
+            score = 50  
+
+        # ✅ Include topic, score, and feedback in the response
+        formatted_feedback = f"**Topic:** {topic}\n\n{feedback}"
+
+        return JSONResponse(content={"feedback": formatted_feedback, "score": score}, status_code=200)
+
 
     except Exception as e:
         logger.error(f"Error: {str(e)}")

@@ -6,7 +6,8 @@ import { Check, Copy, ArrowLeft, Save, Award, AlertTriangle, ThumbsUp } from 'lu
 const Results = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const feedback = location.state?.feedback;  // ✅ Get actual feedback from the backend
+  const feedback = location.state?.feedback;
+  const score = location.state?.score;  // ✅ Get actual feedback from the backend
   const [copied, setCopied] = React.useState(false);
 
   if (!feedback) {
@@ -16,6 +17,13 @@ const Results = () => {
       </div>
     );
   }
+// ✅ Extract the topic from the feedback text
+  const extractTopic = (feedback) => {
+    const match = feedback.match(/\*\*Topic:\*\* (.+)/);
+    return match ? match[1] : "Unknown Topic";
+  };
+  
+  const topic = extractTopic(feedback);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(feedback);
@@ -25,7 +33,7 @@ const Results = () => {
 
   const handleSaveToHistory = () => {
     const submission = {
-      title: "Submission Title", // Can be dynamic based on the feedback or user
+      title: topic, // Can be dynamic based on the feedback or user
       feedback: feedback,
       date: new Date().toLocaleString(),
     };
@@ -141,7 +149,7 @@ const renderFormattedFeedback = (feedback) => {
               </div>
               <div className="flex items-center space-x-3">
                 <Award className="h-8 w-8 text-indigo-600" />
-                <span className="text-4xl font-bold text-indigo-600">✔️</span>
+                <span className="text-4xl font-bold text-indigo-600">{score}/100✔️</span>
               </div>
             </div>
           </div>
