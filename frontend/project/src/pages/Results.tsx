@@ -23,6 +23,19 @@ const Results = () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleSaveToHistory = () => {
+    const submission = {
+      title: "Submission Title", // Can be dynamic based on the feedback or user
+      feedback: feedback,
+      date: new Date().toLocaleString(),
+    };
+
+    const existingHistory = JSON.parse(localStorage.getItem('feedbackHistory') || '[]');
+    existingHistory.push(submission);
+    localStorage.setItem('feedbackHistory', JSON.stringify(existingHistory));
+    alert('Feedback saved to history!');
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -40,14 +53,14 @@ const Results = () => {
 
       <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
         <div className="flex justify-between items-center mb-8">
-          <motion.h2 
+          <motion.h2
             initial={{ x: -20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             className="text-3xl font-bold text-gray-900"
           >
             Feedback Results
           </motion.h2>
-          <motion.div 
+          <motion.div
             initial={{ x: 20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             className="flex space-x-4"
@@ -73,6 +86,7 @@ const Results = () => {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
+              onClick={handleSaveToHistory}
               className="flex items-center px-4 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 transition-colors space-x-2"
             >
               <Save className="h-5 w-5" />
@@ -115,3 +129,4 @@ const Results = () => {
 };
 
 export default Results;
+

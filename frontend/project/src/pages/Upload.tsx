@@ -7,7 +7,9 @@ import axios from 'axios';
 const Upload = () => {
   const navigate = useNavigate();
   const [file, setFile] = useState<File | null>(null);
+  const [text, setText] = useState<string>('');
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadMode, setUploadMode] = useState<'file' | 'text'>('file');  // Switch between file and text upload mode
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -15,12 +17,21 @@ const Upload = () => {
     }
   };
 
+  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setText(e.target.value);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!file) return;
+    if (uploadMode === 'file' && !file) return;
+    if (uploadMode === 'text' && !text) return;
 
     const formData = new FormData();
-    formData.append('file', file);
+    if (uploadMode === 'file') {
+      formData.append('file', file!);  // Force non-null as we already check for file
+    } else {
+      formData.append('text', text);
+    }
 
     try {
       setIsUploading(true);
@@ -53,21 +64,43 @@ const Upload = () => {
         </motion.div>
 
         <form onSubmit={handleSubmit} className="space-y-8">
-          <div className="border-2 border-dashed rounded-2xl p-12 text-center">
-            <UploadIcon className="h-12 w-12 text-indigo-600" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Drag & Drop a file here</h3>
+          <div className="mb-6">
+            <button
+              type="button"
+              onClick={() => setUploadMode(uploadMode === 'file' ? 'text' : 'file')}
+              className="w-full bg-indigo-600 text-white py-3 rounded-xl font-semibold mb-4"
+            >
+              Switch to {uploadMode === 'file' ? 'Text Upload' : 'File Upload'}
+            </button>
 
-            <label className="inline-block">
-              <input type="file" className="hidden" onChange={handleFileChange} />
-              <span className="px-6 py-3 rounded-xl bg-indigo-100 text-indigo-600">
-                <FileText className="h-5 w-5" /> Browse files
-              </span>
-            </label>
+            {uploadMode === 'file' ? (
+              <div className="border-2 border-dashed rounded-2xl p-12 text-center">
+                <UploadIcon className="h-12 w-12 text-indigo-600" />
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Drag & Drop a file here</h3>
+
+                <label className="inline-block">
+                  <input type="file" className="hidden" onChange={handleFileChange} />
+                  <span className="px-6 py-3 rounded-xl bg-indigo-100 text-indigo-600">
+                    <FileText className="h-5 w-5" /> Browse files
+                  </span>
+                </label>
+              </div>
+            ) : (
+              <div className="border-2 border-dashed rounded-2xl p-12 text-center">
+                <textarea
+                  className="w-full p-4 border rounded-lg"
+                  rows={6}
+                  placeholder="Paste your text here"
+                  value={text}
+                  onChange={handleTextChange}
+                />
+              </div>
+            )}
           </div>
 
           <button
             type="submit"
-            disabled={!file || isUploading}
+            disabled={(uploadMode === 'file' && !file) || (uploadMode === 'text' && !text) || isUploading}
             className="w-full bg-indigo-600 text-white py-4 rounded-xl font-semibold"
           >
             {isUploading ? 'Uploading...' : 'Generate Feedback'}
@@ -80,3 +113,4 @@ const Upload = () => {
 };
 
 export default Upload;
+

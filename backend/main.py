@@ -1,9 +1,11 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, HTTPException, Form
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import google.generativeai as genai
 import os
+from docx import Document
+import pdfplumber
 from dotenv import load_dotenv
 import logging
 
@@ -50,22 +52,61 @@ async def catch_all(full_path: str):
     Serve React index.html for all routes to prevent 404s on page refresh
     """
     index_path = os.path.join(frontend_path, "index.html")
-    
+
     if os.path.exists(index_path):
         return FileResponse(index_path)
     return JSONResponse(content={"error": "index.html not found"}, status_code=404)
 
-# ✅ Backend route for feedback generation
+# ✅ Function to extract text from PDF
+def extract_text_from_pdf(file):
+    with pdfplumber.open(file.file) as pdf:
+        text = ""
+        for page in pdf.pages:
+            text += page.extract_text()
+        return text
+
+# ✅ Function to extract text from DOCX
+def extract_text_from_docx(file):
+    doc = Document(file.file)
+    text = ""
+    for paragraph in doc.paragraphs:
+        text += paragraph.text + "\n"
+    return text
+
+def extract_topic(text: str) -> str:
+    # Basic method: take the first sentence as the topic
+    sentences = text.split(".")
+    if sentences:
+        return sentences[0]  # Return the first sentence as the topic
+    return "Untitled"
+
+
+# ✅ Backend route for feedback generation (handles both text input and file upload)
 @app.post("/generate-feedback")
-async def generate_feedback(file: UploadFile = File(...)):
+async def generate_feedback(
+    file: UploadFile = File(None), text: str = Form(None)
+):
     """
     Generate feedback using Google Gemini API
+    - Accepts either a text file upload or plain text input
     """
     try:
-        content = await file.read()
-        text = content.decode("utf-8")
+        # If file is provided, extract its text
+        if file:
+            if file.content_type == "application/pdf":
+                text = extract_text_from_pdf(file)
+            elif file.content_type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+                text = extract_text_from_docx(file)
+            else:
+                raise HTTPException(status_code=400, detail="Unsupported file type. Please upload a PDF or DOCX file.")
+        
+        # If no text is provided, raise an error
+        if not text:
+            raise HTTPException(status_code=400, detail="No input text or file provided.")
+         # Extract the topic (first sentence for simplicity)
+        topic = extract_topic(text)
 
-        # Call Gemini API
+        # Call Gemini API to generate feedback
         model = genai.GenerativeModel("models/gemini-1.5-pro-latest")
         response = model.generate_content(f"Give detailed feedback on this student submission:\n{text}")
 
@@ -76,3 +117,4 @@ async def generate_feedback(file: UploadFile = File(...)):
     except Exception as e:
         logger.error(f"Error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
