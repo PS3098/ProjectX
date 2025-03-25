@@ -4,11 +4,11 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import google.generativeai as genai
 import os
-import re
-from docx import Document
 import pdfplumber
+from docx import Document
 from dotenv import load_dotenv
 import logging
+import json
 
 # ✅ Load environment variables
 load_dotenv()
@@ -46,18 +46,6 @@ if os.path.exists(frontend_path):
 else:
     logger.error(f"❌ Frontend build directory not found: {frontend_path}")
 
-# ✅ Catch-all route for React routing
-@app.get("/{full_path:path}")
-async def catch_all(full_path: str):
-    """
-    Serve React index.html for all routes to prevent 404s on page refresh
-    """
-    index_path = os.path.join(frontend_path, "index.html")
-
-    if os.path.exists(index_path):
-        return FileResponse(index_path)
-    return JSONResponse(content={"error": "index.html not found"}, status_code=404)
-
 # ✅ Function to extract text from PDF
 def extract_text_from_pdf(file):
     with pdfplumber.open(file.file) as pdf:
@@ -74,65 +62,87 @@ def extract_text_from_docx(file):
         text += paragraph.text + "\n"
     return text
 
+# ✅ Extract topic from text
 def extract_topic(text: str) -> str:
-    # Basic method: take the first sentence as the topic
     sentences = text.split(".")
-    if sentences:
-        return sentences[0]  # Return the first sentence as the topic
-    return "Untitled"
+    return sentences[0] if sentences else "Untitled"
 
 
-# ✅ Backend route for feedback generation (handles both text input and file upload)
+# ✅ Backend route for feedback generation (handles file upload)
 @app.post("/generate-feedback")
-async def generate_feedback(
-    file: UploadFile = File(None), text: str = Form(None)
-):
+async def generate_feedback(file: UploadFile = File(None), text: str = Form(None)):
     """
     Generate feedback using Google Gemini API
     - Accepts either a text file upload or plain text input
     """
     try:
-        # If file is provided, extract its text
         if file:
             if file.content_type == "application/pdf":
                 text = extract_text_from_pdf(file)
             elif file.content_type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
                 text = extract_text_from_docx(file)
             else:
-                raise HTTPException(status_code=400, detail="Unsupported file type. Please upload a PDF or DOCX file.")
+                raise HTTPException(status_code=400, detail="Unsupported file type. Please upload PDF or DOCX.")
         
-        # If no text is provided, raise an error
         if not text:
             raise HTTPException(status_code=400, detail="No input text or file provided.")
-         # Extract the topic (first sentence for simplicity)
+        
         topic = extract_topic(text)
 
-        # Call Gemini API to generate feedback
+        # ✅ Generate Feedback
         model = genai.GenerativeModel("models/gemini-1.5-pro-latest")
-        response = model.generate_content(f"Give detailed feedback on this student submission:\n{text}")
-
+        response = model.generate_content(f"Provide detailed feedback:\n{text}")
         feedback = response.text
+
+        # ✅ Generate Score
         score_prompt = (
-            "Evaluate the student's submission on a scale of 0 to 100 based on clarity, grammar, coherence, and relevance. "
-            "Respond only with a number and no explanation."
+            "Evaluate the submission on a scale of 0 to 100 for clarity, grammar, and coherence. "
+            "Return only the number."
         )
         score_response = model.generate_content(score_prompt)
-
-        # ✅ Extract the score safely
         score_text = score_response.text.strip() if score_response.text else "50"
         try:
-            score = int(''.join(filter(str.isdigit, score_text)))  # Extract numbers only
-            score = max(0, min(score, 100))  # Ensure score is within 0-100
+            score = int(''.join(filter(str.isdigit, score_text)))
+            score = max(0, min(score, 100))  
         except ValueError:
-            score = 50  
+            score = 50
 
-        # ✅ Include topic, score, and feedback in the response
-        formatted_feedback = f"**Topic:** {topic}\n\n{feedback}"
+        # ✅ Save to history
+        history_path = "history.json"
+        history = []
+        if os.path.exists(history_path):
+            with open(history_path, "r") as f:
+                history = json.load(f)
 
-        return JSONResponse(content={"feedback": formatted_feedback, "score": score}, status_code=200)
+        feedback_id = len(history) + 1
 
+        history.append({
+            "id": feedback_id,
+            "topic": topic,
+            "score": score,
+            "feedback": feedback
+        })
+
+        with open(history_path, "w") as f:
+            json.dump(history, f, indent=4)
+
+        return JSONResponse(content={
+            "id": feedback_id,
+            "feedback": feedback,
+            "score": score
+        }, status_code=200)
 
     except Exception as e:
         logger.error(f"Error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
 
+
+# ✅ Route to fetch feedback history
+@app.get("/history")
+async def get_history():
+    history_path = "history.json"
+    if os.path.exists(history_path):
+        with open(history_path, "r") as f:
+            history = json.load(f)
+        return JSONResponse(content=history, status_code=200)
+    return JSONResponse(content=[], status_code=200)
