@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Upload as UploadIcon, FileText, ArrowRight } from 'lucide-react';
+import { Upload as UploadIcon, FileText, ArrowRight, CheckCircle, XCircle } from 'lucide-react';
 import axios from 'axios';
 
 const Upload = () => {
@@ -9,11 +9,14 @@ const Upload = () => {
   const [file, setFile] = useState<File | null>(null);
   const [text, setText] = useState<string>('');
   const [isUploading, setIsUploading] = useState(false);
-  const [uploadMode, setUploadMode] = useState<'file' | 'text'>('file');  // Switch between file and text upload mode
+  const [uploadMode, setUploadMode] = useState<'file' | 'text'>('file');  
+  const [fileName, setFileName] = useState<string | null>(null);  // For displaying file name
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
+      const selectedFile = e.target.files[0];
+      setFile(selectedFile);
+      setFileName(selectedFile.name);  // Display the selected file name
     }
   };
 
@@ -28,7 +31,7 @@ const Upload = () => {
 
     const formData = new FormData();
     if (uploadMode === 'file') {
-      formData.append('file', file!);  // Force non-null as we already check for file
+      formData.append('file', file!);
     } else {
       formData.append('text', text);
     }
@@ -41,13 +44,11 @@ const Upload = () => {
       });
 
       navigate('/results', {
-  state: {
-    feedback: response.data.feedback || "No feedback generated.",
-    score: response.data.score ?? "N/A",  // Prevent undefined errors
-  },
-});
-
-
+        state: {
+          feedback: response.data.feedback || "No feedback generated.",
+          score: response.data.score ?? "N/A",
+        },
+      });
     } catch (error) {
       console.error('Upload failed:', error);
       alert('Failed to upload. Please try again.');
@@ -80,16 +81,29 @@ const Upload = () => {
             </button>
 
             {uploadMode === 'file' ? (
-              <div className="border-2 border-dashed rounded-2xl p-12 text-center">
-                <UploadIcon className="h-12 w-12 text-indigo-600" />
+              <div className="border-2 border-dashed rounded-2xl p-12 text-center relative">
+                <UploadIcon className="h-12 w-12 text-indigo-600 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">Drag & Drop a file here</h3>
 
                 <label className="inline-block">
-                  <input type="file" className="hidden" onChange={handleFileChange} />
-                  <span className="px-6 py-3 rounded-xl bg-indigo-100 text-indigo-600">
-                    <FileText className="h-5 w-5" /> Browse files
+                  <input
+                    type="file"
+                    className="hidden"
+                    onChange={handleFileChange}
+                  />
+                  <span className="px-6 py-3 rounded-xl bg-indigo-100 text-indigo-600 cursor-pointer">
+                    <FileText className="h-5 w-5 inline mr-2" />
+                    Browse files
                   </span>
                 </label>
+
+                {/* Display uploaded file name */}
+                {fileName && (
+                  <div className="mt-4 text-green-600 flex items-center justify-center">
+                    <CheckCircle className="h-5 w-5 mr-2" />
+                    <span>{fileName}</span>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="border-2 border-dashed rounded-2xl p-12 text-center">
@@ -107,10 +121,10 @@ const Upload = () => {
           <button
             type="submit"
             disabled={(uploadMode === 'file' && !file) || (uploadMode === 'text' && !text) || isUploading}
-            className="w-full bg-indigo-600 text-white py-4 rounded-xl font-semibold"
+            className="w-full bg-indigo-600 text-white py-4 rounded-xl font-semibold flex justify-center items-center"
           >
             {isUploading ? 'Uploading...' : 'Generate Feedback'}
-            <ArrowRight className="h-5 w-5" />
+            <ArrowRight className="h-5 w-5 ml-2" />
           </button>
         </form>
       </div>
@@ -119,4 +133,3 @@ const Upload = () => {
 };
 
 export default Upload;
-
