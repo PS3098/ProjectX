@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Clock, Search, Filter, ArrowRight } from 'lucide-react';
+import { Clock, Search, ArrowRight } from 'lucide-react';
 
 const History = () => {
   const navigate = useNavigate();
   const [history, setHistory] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // ✅ Load history from localStorage
+  // Load history from localStorage
   useEffect(() => {
     const storedHistory = localStorage.getItem('feedbackHistory');
     if (storedHistory) {
@@ -16,12 +16,12 @@ const History = () => {
     }
   }, []);
 
-  // ✅ Filter history by search term
+  // Filter history by search term
   const filteredHistory = history.filter((item) =>
     item.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // ✅ Navigate to detailed feedback page
+  // Navigate to detailed feedback page
   const handleViewFeedback = (feedback, score, topic) => {
     navigate('/results', {
       state: {
@@ -53,10 +53,6 @@ const History = () => {
                 className="pl-10 pr-4 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               />
             </div>
-            <button className="flex items-center px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200">
-              <Filter className="h-5 w-5 mr-2" />
-              Filter
-            </button>
           </div>
         </div>
 
@@ -76,7 +72,7 @@ const History = () => {
                 <div className="flex justify-between items-center">
                   <div>
                     <h3 className="text-xl font-semibold text-gray-900">
-                      {item.title}
+                      {item.title || item.feedback.split(' ').slice(0, 5).join(' ')}
                     </h3>
                     <div className="flex items-center text-gray-500 mt-2">
                       <Clock className="h-4 w-4 mr-2" />
@@ -103,3 +99,4 @@ const History = () => {
 };
 
 export default History;
+

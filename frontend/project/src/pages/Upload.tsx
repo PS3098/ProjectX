@@ -10,7 +10,8 @@ const Upload = () => {
   const [text, setText] = useState<string>('');
   const [isUploading, setIsUploading] = useState(false);
   const [uploadMode, setUploadMode] = useState<'file' | 'text'>('file');  
-  const [fileName, setFileName] = useState<string | null>(null);  // For displaying file name
+  const [fileName, setFileName] = useState<string | null>(null);
+const [topic, setTopic] = useState<string>('');
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -22,6 +23,9 @@ const Upload = () => {
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setText(e.target.value);
+  };
+  const handleTopicChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setTopic(e.target.value);  // Set topic from input field
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -47,6 +51,7 @@ const Upload = () => {
         state: {
           feedback: response.data.feedback || "No feedback generated.",
           score: response.data.score ?? "N/A",
+topic: topic || "Unknown Topic",
         },
       });
     } catch (error) {
@@ -56,8 +61,7 @@ const Upload = () => {
       setIsUploading(false);
     }
   };
-
-  return (
+return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -79,6 +83,19 @@ const Upload = () => {
             >
               Switch to {uploadMode === 'file' ? 'Text Upload' : 'File Upload'}
             </button>
+
+ {/* Topic input field */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700">Topic of Submission</label>
+              <input
+                type="text"
+                value={topic}
+                onChange={handleTopicChange}
+                className="w-full p-3 mt-1 border rounded-xl shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                placeholder="Enter the topic of submission"
+              />
+            </div>
+
 
             {uploadMode === 'file' ? (
               <div className="border-2 border-dashed rounded-2xl p-12 text-center relative">
