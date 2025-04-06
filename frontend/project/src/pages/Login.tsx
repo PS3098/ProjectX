@@ -149,7 +149,7 @@ navigate('/home');
 
         <p className="mt-8 text-center text-sm text-gray-600">
           Don't have an account?{' '}
-          <button className="font-medium text-indigo-600 hover:text-indigo-500">Sign up now</button>
+          <button onClick={() => navigate('/signup')} className="font-medium text-indigo-600 hover:text-indigo-500">Sign up now</button>
         </p>
       </div>
     </div>

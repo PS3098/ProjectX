@@ -8,6 +8,7 @@ import Upload from './pages/Upload';
 import Results from './pages/Results';
 import History from './pages/History';
 import Login from './pages/Login';
+import Signup from './pages/Signup';
 
 const AnimatedRoutes = ({ isAuthenticated, onLogin }: any) => {
   const location = useLocation();
@@ -49,6 +50,8 @@ const AnimatedRoutes = ({ isAuthenticated, onLogin }: any) => {
                 isAuthenticated ? <History /> : <Navigate to="/" replace />
               }
             />
+<Route path="/signup" element={<Signup />} />
+
             <Route path="*" element={<Navigate to={isAuthenticated ? "/home" : "/"} />} />
           </Routes>
         </AnimatePresence>
