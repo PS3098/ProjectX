@@ -43,7 +43,7 @@ const [topic, setTopic] = useState<string>('');
     try {
       setIsUploading(true);
 
-      const response = await axios.post('http://127.0.0.1:8000/generate-feedback', formData, {
+      const response = await axios.post('https://render-1-i0pe.onrender.com/generate-feedback', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
